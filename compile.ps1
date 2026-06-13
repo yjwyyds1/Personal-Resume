@@ -1,10 +1,12 @@
 # ============================================================
 # Resume PDF Generator
 # Usage:
-#   .\compile.ps1           →  compile once (resume.pdf)
-#   .\compile.ps1 -Watch    →  watch mode, recompile on change
+#   .\compile.ps1                               →  compile resume.typ → resume.pdf
+#   .\compile.ps1 -Watch                        →  watch mode for resume.typ
+#   .\compile.ps1 -Template resume-zh.typ       →  compile Chinese resume
+#   .\compile.ps1 -Template resume-zh.typ -Watch→  watch mode for Chinese resume
 # ============================================================
-param([switch]$Watch)
+param([switch]$Watch, [string]$Template = "resume.typ")
 
 $ErrorActionPreference = "Stop"
 
@@ -24,21 +26,28 @@ if (-not $typst) {
 
 Write-Host "Typst version: $(typst --version)" -ForegroundColor Green
 
-# Ensure resume.typ exists (copy from example template if not)
-if (-not (Test-Path -LiteralPath "resume.typ")) {
-  Write-Host "resume.typ not found. Copying from resume.example.typ ..." -ForegroundColor Yellow
-  Copy-Item -LiteralPath "resume.example.typ" -Destination "resume.typ"
-  Write-Host "Edit resume.typ with your personal info, then re-run this script." -ForegroundColor Cyan
-  exit 0
+# Ensure source file exists (copy from example template if not)
+if (-not (Test-Path -LiteralPath $Template)) {
+  $example = $Template -replace '\.typ$', '.example.typ'
+  if (Test-Path -LiteralPath $example) {
+    Write-Host "$Template not found. Copying from $example ..." -ForegroundColor Yellow
+    Copy-Item -LiteralPath $example -Destination $Template
+    Write-Host "Edit $Template with your personal info, then re-run this script." -ForegroundColor Cyan
+    exit 0
+  }
+  else {
+    Write-Host "$Template not found and no example template available." -ForegroundColor Red
+    exit 1
+  }
 }
 
 if ($Watch) {
   Write-Host "Watching for changes... (Ctrl+C to stop)" -ForegroundColor Cyan
-  typst watch resume.typ resume.pdf
+  typst watch $Template resume.pdf
 }
 else {
-  Write-Host "Compiling resume.typ → resume.pdf ..." -ForegroundColor Cyan
-  typst compile resume.typ resume.pdf
+  Write-Host "Compiling $Template → resume.pdf ..." -ForegroundColor Cyan
+  typst compile $Template resume.pdf
   if ($LASTEXITCODE -eq 0) {
     Write-Host "Done: resume.pdf" -ForegroundColor Green
   }

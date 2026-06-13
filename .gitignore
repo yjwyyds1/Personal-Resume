@@ -1,5 +1,7 @@
 # Personal resume (your real info — keep local)
 resume.typ
+resume-zh.typ
 
-# Generated PDF
-resume.pdf
+# Generated PDF / images
+*.pdf
+*.png
